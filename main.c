@@ -1,126 +1,309 @@
+
 #include <stdio.h>
 #include <stdint.h>
-
-typedef struct donnee_struct{
-    char nom;
-    double proba;
-}donnee;
-
-typedef struct hoffman_struct{
-    char nomFeuille[10];
-    double valeurFeuille;
-    int* droite;
-    int* gauche;
-}hoffman;
-
-int Init_Hoffman(void);
-
-int main(void){
-    int valeur, echange;
-
-    valeur = Init_Hoffman();
-    
-}
-
-int Init_Hoffman(void){
-    int valeur;
-    donnee* feuille;
-
-    printf("Combien de valeurs dans Hoffman ?\n");
-    scanf("%d",valeur);
-    
-    
-    for(int i = 0 ; i< valeur ; i++){
-	donnee structure_proba[valeur];
-        structure_proba[i].nom = "EV%d",i+1;
-        structure_proba[i].proba = 0.00;
-    }
-    
-    for(int i = 0 ; i< valeur ; i++){
-        printf("-----------------------\n");
-        printf("Nom de %d\n",i+1);
-        scanf("%s",structure_proba[i].nom);
-        printf("Proba de %d\n",i+1);
-        scanf("%f",structure_proba[i].proba);
-        printf("-----------------------\n");
-    }
-    
-    for(int i = 0 ; i< valeur ; i++){
-        printf("-----------------------\n");
-        printf("En résumé, nous avons \n");
-        printf("%s\t",structure_proba[i].nom);
-    }
-    printf("\n");
-    for(int i = 0 ; i< valeur ; i++){
-        printf("%f\t",structure_proba[i].proba);
-    }
-    printf("\n");
-    printf("-----------------------\n");
-    
-
-    return valeur;
-
-}
-
-
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "huffman.h"
 
-typedef struct donnee_struct {
-    char nom[10];
-    double proba;
-} donnee;
+#define TAILLE_MAX_Compress 100
 
-int Init_Hoffman(void);
 
-int main(void) {
-    int valeur = Init_Hoffman();
-    printf("Valeur retournée : %d\n", valeur);
-    return 0;
+uint8_t	texte[]="aaaabbbccd";				            //Texte non compressé
+
+uint8_t    texteCompress[TAILLE_MAX_Compress];		        //Texte compressé
+uint32_t	tabCaractere[256] = {0};			            //Tableau du nombre d'occurrence de chaque caratère
+uint32_t	nbrCaractereTotal = 0;				            //Nombre de caractère total dans le texte non compressé
+uint32_t	nbrCaractereDifferent = 0;			            //Nombre de caractère différent dans le texte non compressé
+uint8_t    tailleCompress = 0;
+uint8_t    entete[]={0};
+
+struct noeud*   arbreHuffman[256] = {NULL};			      //arbre de Huffman
+struct noeud*   racine  = NULL;
+
+
+void main (void){
+  printf("---------------------------------------Welcome into main-------------------------------------------\r\n");
+    nbrCaractereTotal = occurrence (texte, tabCaractere);
+  printf("---------------------------------------occurrence done---------------------------------------------\r\n");
+	nbrCaractereDifferent = creerFeuille (arbreHuffman, tabCaractere);
+  printf("---------------------------------------creerFeuille done-------------------------------------------\r\n");
+  afficherTabArbreHuffman (arbreHuffman, nbrCaractereDifferent);
+  printf("---------------------------------------affiArbre done----------------------------------------------\r\n");
+  triArbre (arbreHuffman,nbrCaractereDifferent);
+  printf("---------------------------------------triArbre done-----------------------------------------------\r\n");
+  afficherTabArbreHuffman (arbreHuffman, nbrCaractereDifferent);
+  racine = creerArbre(arbreHuffman, nbrCaractereDifferent);
+  printf("---------------------------------------creerArbre done---------------------------------------------\r\n");
+  parcourirArbre(racine);
+  printf("---------------------------------------parcourirArbre done-----------------------------------------\r\n");
+  creerCode(racine,0,0);
+  printf("---------------------------------------creerCode done----------------------------------------------\r\n");
+  tailleCompress = compressionTexte(texte,texteCompress,racine);
+  printf("------------------------------------compressionTexte done-------------------------------------------\r\n");
+  creationEntete(entete,nbrCaractereTotal,texteCompress,tailleCompress, nbrCaractereDifferent,racine, texte);
 }
 
-int Init_Hoffman(void) {
-    int valeur;
-    printf("Combien de valeurs dans Hoffman ?\n");
-    scanf("%d", &valeur);  // CORRECTION: &valeur
 
-    // Allocation dynamique
-    donnee* structure_proba = malloc(valeur * sizeof(donnee));
-    if (structure_proba == NULL) {
-        printf("Erreur d'allocation mémoire\n");
-        return -1;
-    }
-
-    // Initialisation des noms automatiques et probabilités à 0
-    for (int i = 0; i < valeur; i++) {
-        snprintf(structure_proba[i].nom, sizeof(structure_proba[i].nom), "EV%d", i + 1);
-        structure_proba[i].proba = 0.0;
-    }
-
-    // Remplissage depuis l'utilisateur
-    for (int i = 0; i < valeur; i++) {
-        printf("-----------------------\n");
-        printf("Nom de %d: ", i + 1);
-        scanf("%s", structure_proba[i].nom);
-
-        printf("Proba de %d: ", i + 1);
-        scanf("%lf", &structure_proba[i].proba);  // CORRECTION: & et %lf
-        printf("-----------------------\n");
-    }
-
-    // Résumé
-    printf("En résumé, nous avons:\n");
-    for (int i = 0; i < valeur; i++) {
-        printf("%s\t", structure_proba[i].nom);
-    }
-    printf("\n");
-    for (int i = 0; i < valeur; i++) {
-        printf("%.2lf\t", structure_proba[i].proba);
-    }
-    printf("\n-----------------------\n");
-
-    // Libération mémoire
-    free(structure_proba);
-    return valeur;
+uint32_t occurrence (uint8_t* texte, uint32_t tabCaractere[256]){
+    uint32_t compteur = 0 ;
+    for(uint8_t i = 0; i < strlen(texte); i++){
+        
+        compteur+=1;
+        tabCaractere[texte[i]] += 1;
+	}
+	return compteur;
 }
+
+
+uint32_t creerFeuille (struct noeud* arbreHuffman[256], uint32_t tabCaractere[256]){
+  uint8_t compteur = 0;
+  struct noeud* n;
+  uint8_t* addresseStructure = NULL;
+  
+
+	for(uint8_t i = 0; i < 255; i++){
+	    
+		if(tabCaractere[i] != 0){
+			n = malloc (sizeof(struct noeud));
+            n->c = i;
+			n->occurrence = tabCaractere[i];
+			n->code = 0;
+			n->tailleCode = 0;
+			n->droite = NULL;
+			n->gauche = NULL;
+      
+			arbreHuffman[compteur] = n;
+			compteur++;
+		}
+	}
+	
+  return compteur;
+}
+
+void afficherTabArbreHuffman (struct noeud* arbreHuffman[256],uint32_t nbrCaractereDifferent){
+  struct noeud* n;
+  
+  for(uint8_t i = 0; i < nbrCaractereDifferent; i++){
+      
+    if (arbreHuffman[i] != NULL){
+      n=arbreHuffman[i];
+      printf("Le noeud du caractère %c existe, il a %d occurrence(s)\r\n", n->c, n->occurrence);
+    }
+  }
+}
+
+void triArbre (struct noeud* arbreHuffman[256],uint32_t nbrCaractereDifferent){
+  struct noeud* n0;
+  struct noeud* n1;
+  
+  for(uint8_t u = 0; u < nbrCaractereDifferent-1; u++){
+      
+    for(uint8_t i = 0; i < nbrCaractereDifferent-1; i++){
+        
+      n0=arbreHuffman[i];
+      n1=arbreHuffman[i+1];
+      if (n1->occurrence < n0->occurrence){
+        arbreHuffman[i]=n1;
+        arbreHuffman[i+1]=n0;
+      }
+    }
+  }
+}
+
+struct noeud* creerArbre(struct noeud* arbreHuffman[256],uint32_t nbrCaractereDifferent){
+  struct noeud* racine;
+  struct noeud* n0;
+  struct noeud* n1;
+  
+  for(uint8_t i = 0; i < nbrCaractereDifferent-1; i++){
+    n0=arbreHuffman[i];
+    n1=arbreHuffman[i+1];
+    
+    racine = malloc (sizeof(struct noeud));
+    racine->c = '!';
+    racine->occurrence=n0->occurrence+n1->occurrence;
+    racine->gauche=n0;
+    racine->droite=n1;
+    arbreHuffman[i+1]=racine;
+  }
+  
+  return racine;
+}
+
+void parcourirArbre(struct noeud* ptrNoeud){
+  if(ptrNoeud->droite == NULL && ptrNoeud->gauche == NULL){
+    printf("Je suis une feuille\r\n");
+  }
+  
+  else{
+    printf("Je suis un noeud\r\n");
+    parcourirArbre(ptrNoeud->gauche);
+    parcourirArbre(ptrNoeud->droite);
+    
+  }
+}
+
+void creerCode (struct noeud* ptrNoeud, uint32_t code, uint32_t nbrCaractereDifferent){
+    
+    if(ptrNoeud->droite == NULL && ptrNoeud->gauche == NULL){
+        ptrNoeud->tailleCode = nbrCaractereDifferent;
+        ptrNoeud->code = code;
+        printf("%c \t code : %d \t taille : %d \r\n", ptrNoeud->c, ptrNoeud->code, ptrNoeud->tailleCode);
+    }
+    
+    else{
+        creerCode(ptrNoeud->droite, (code<<1), nbrCaractereDifferent+1);
+        creerCode(ptrNoeud->gauche, (code<<1)+1, nbrCaractereDifferent+1);
+    }
+}
+
+struct noeud* getAdress(struct noeud* ptrNoeud, uint8_t caractere){                        //Fonction retourne l'adresse du noeud contenant le bon caractère
+    if(ptrNoeud->c == caractere){
+        return ptrNoeud;
+    }
+    
+    else if(ptrNoeud->droite != NULL && getAdress(ptrNoeud->droite, caractere) != NULL){
+        getAdress(ptrNoeud->droite, caractere);
+    }
+    
+    else if(ptrNoeud->gauche != NULL && getAdress(ptrNoeud->gauche, caractere) != NULL){
+        getAdress(ptrNoeud->gauche, caractere);
+    }
+}
+
+uint32_t compressionTexte(uint8_t texte[], uint8_t texteCompress[TAILLE_MAX_Compress], struct noeud* racine){
+    uint8_t caractere = 0;
+    uint8_t cptBitMem = 0;
+    uint8_t cptMot = 0;
+    uint8_t compress = 00000000;
+    uint8_t index = 0;
+    struct noeud* ptrNoeud;
+    uint8_t code = 0;
+    uint8_t j = 0;
+    uint8_t i = 0;
+    uint8_t debordement = 0;
+    
+    while(i<strlen(texte) && i<TAILLE_MAX_Compress){
+        index = 0;
+        if (debordement == 1){
+            index = 1;
+            debordement = 0;
+        }
+        
+        switch (index){
+            case 0 :
+                
+            if(texte[i] != caractere){
+                ptrNoeud = getAdress(racine, texte[i]);
+                caractere = texte[i];
+                index = 1;
+            }
+            
+            else{
+                index = 1;
+            }
+    
+            case 1 :
+
+                if(cptBitMem+(ptrNoeud->tailleCode) < 9){
+                    compress = (compress<<ptrNoeud->tailleCode) + ptrNoeud->code;
+                    cptBitMem += (ptrNoeud->tailleCode);
+                    i++;
+                    break;
+                }
+                else{
+                    index = 2;
+                }
+            
+            case 2 :
+            
+                code = ptrNoeud->code;
+                if (cptBitMem == 8){
+                    texteCompress[cptMot] = compress;
+                    compress = 00000000;
+                    cptMot++;
+                    cptBitMem = 0;
+                    debordement = 1;
+                }
+                
+                else{
+                    j = 8-cptBitMem;
+                    compress +=(code>>(ptrNoeud->tailleCode-j));
+                    texteCompress[cptMot] = compress;
+                    compress = 00000000;
+                    cptMot++;
+                    compress = (code<<j);
+                    cptBitMem = (ptrNoeud->tailleCode-j);
+                    i++;
+                    break;
+                }
+                
+        }
+    }
+    
+    if(compress != 00000000){
+        compress = compress<<(8-cptBitMem);
+        texteCompress[cptMot] = compress;
+    }
+    
+    else{
+        cptMot--;
+    }
+    
+    for(uint8_t i = 0; i != cptMot+1; i++){
+      printf("la case n° %d du tableau contien %X\n", i, texteCompress[i]);
+    }
+    
+    return cptMot+1;
+}
+
+void creationEntete(uint8_t* entete, uint32_t nbrCaractereTotal, uint8_t* texteCompress, uint8_t tailleCompress, uint32_t nbrCaractereDifferent, struct noeud* racine, uint8_t texte[]){
+    uint32_t index = 6;
+    struct noeud* ptrNoeud;
+    uint32_t tabCaractere[nbrCaractereDifferent];
+    uint8_t flagCaractere = 0;
+    uint8_t indexCaractere = 0;
+    
+    entete[2] = tailleCompress;
+    entete[3] = 0;
+    
+    entete[4] = (uint8_t) (nbrCaractereTotal & 0xFF);
+    entete[5] = (uint8_t) (nbrCaractereTotal>>8 & 0xFF);
+    entete[index] = (uint8_t) (nbrCaractereDifferent & 0xFF);
+    index++;
+    for (uint32_t i = 0; i < nbrCaractereTotal; i++){
+        
+        ptrNoeud = getAdress(racine, texte[i]);
+        flagCaractere = 0;
+        for (uint32_t j = 0; j < nbrCaractereDifferent; j++){
+            
+            if(ptrNoeud->c == tabCaractere[j]){
+                flagCaractere = 1;
+                break;
+            }
+        }
+        if(flagCaractere == 0){
+            entete[index++] = ptrNoeud->c;
+            
+            entete[index++] = (uint8_t)(ptrNoeud->tailleCode & 0xFF);
+            entete[index++] = (uint8_t)(ptrNoeud->tailleCode >> 8) & 0xFF;
+    
+            uint32_t code = ptrNoeud->code;
+            entete[index++] = (uint8_t)((code >> 0*8) & 0xFF);
+            entete[index++] = (uint8_t)((code >> 1*8) & 0xFF);
+            entete[index++] = (uint8_t)((code >> 2*8) & 0xFF);
+            entete[index++] = (uint8_t)((code >> 3*8) & 0xFF);
+            tabCaractere[indexCaractere] = ptrNoeud->c;
+            indexCaractere+=1;
+        }
+    }
+    
+    entete[0] = (uint8_t)(index & 0xFF);
+    entete[1] = (uint8_t)((index >> 8) & 0xFF);
+    
+    for(uint32_t i = 0; i < index; i++){
+        
+      printf("la case n° %d du tableau contien %X en hexa\n", i, entete[i]);
+    }
+}
+
