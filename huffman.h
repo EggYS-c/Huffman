@@ -1,8 +1,8 @@
 /**
  * @file huffman.h
  * @brief Implémentation de l'algorithme de compression Huffman
- * @author Votre Nom
- * @date 2025
+ * @author Grégory Poncet
+ * @date 25/11/2025
  * 
  * Ce fichier contient les structures et fonctions nécessaires pour
  * effectuer une compression de texte utilisant l'algorithme de Huffman.
@@ -173,7 +173,7 @@ uint32_t compressionTexte(uint8_t texte[], uint8_t texteCompress[TAILLE_MAX_Comp
 /**
  * @brief Crée l'en-tête du fichier compressé
  * 
- * Génère l'en-tête contenant les métadonnées nécessaires pour la décompression :
+ * Génère l'en-tête contenant les données nécessaires pour la décompression :
  * - Taille de l'en-tête
  * - Taille du texte compressé
  * - Nombre de caractères total
@@ -192,7 +192,55 @@ void creationEntete(uint8_t* entete, uint32_t nbrCaractereTotal, uint8_t* texteC
                     uint8_t tailleCompress, uint32_t nbrCaractereDifferent, 
                     struct noeud* racine, uint8_t texte[]);
 
-void decompressEntete(uint8_t* entete, uint32_t nbrCaractereTotal, uint8_t* texteCompress, uint8_t tailleCompress, uint32_t nbrCaractereDifferent, struct noeud* arbreHuffman[256]);
+/**
+ * @brief Décompression de l'entête
+ * 
+ * Décompresse l'entête :
+ * - Taille de l'en-tête
+ * - Nombre de caratère totaux dans la chaine originale
+ * - Texte compressé
+ * - Taille du texte compressé
+ * - Nombre de caractères différents
+ * - Tableau de Huffman pour recréer l'arbre
+ * 
+ * @param entete Tableau de sortie pour l'en-tête
+ * @param nbrCaractereTotal Nombre total de caractères dans le texte original
+ * @param texteCompress Texte compressé
+ * @param tailleCompress Taille du texte compressé en octets
+ * @param nbrCaractereDifferent Nombre de caractères différents
+ * @param racine Pointeur vers la racine de l'arbre de Huffman
+ * @param texte Texte original (pour retrouver les caractères)
+ */
+void decompressEntete(uint8_t* entete, uint32_t nbrCaractereTotal, uint8_t* texteCompress, 
+                      uint8_t tailleCompress, uint32_t nbrCaractereDifferent, struct noeud* arbreHuffman[256]);
+
+/**
+ * @brief Retrouve les caractères grâce à leur code
+ * 
+ * Retourne les caractères d'après leur code :
+ * - Structure Noeud
+ * - Code du caractère à trouver
+ * - Taille du code du caractère à trouver
+ *  
+ * @param pointeur de structure noeud
+ * @param code du caractère à retrouver
+ * @param taille du caractère à retrouver
+ */
 struct noeud* getChar(struct noeud* ptrNoeud, uint32_t code, uint32_t tailleCode);
+
+/**
+ * @brief Reconstruit la chaine du début
+ * 
+ * Génère la chaine de caractères après la décompression :
+ * - Texte compressé
+ * - Racine de l'arbre de Huffman décompressé
+ * - Taille du texte compressé
+ * - Nombre de caractères total
+ *  
+ * @param texte compressé pour retrouver les codes des caractères
+ * @param racine pour la passer à getChar();
+ * @param taille du texte compressé pour ne pas reconstruire une chaine plus longue que l'originale
+ * @param nombre de caractères total pour ne pas reconstruire une chaine plus longue que l'originale
+ */
 void reconstructionChaine(uint8_t* texteCompress, struct noeud* racine, uint8_t tailleCompress, uint32_t nbrCaractereTotal);
 #endif /* HUFFMAN_H */
