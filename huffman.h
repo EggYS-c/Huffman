@@ -57,7 +57,7 @@ extern uint32_t  tabCaractere[256];              /**< Tableau du nombre d'occurr
 extern uint32_t  nbrCaractereTotal;              /**< Nombre total de caractères dans le texte non compressé */
 extern uint32_t  nbrCaractereDifferent;          /**< Nombre de caractères différents dans le texte */
 extern uint8_t   tailleCompress;                 /**< Taille du texte compressé */
-extern uint8_t   entete[];                       /**< En-tête du fichier compressé */
+extern uint8_t   entete[1024];                       /**< En-tête du fichier compressé */
 extern struct noeud* arbreHuffman[256];          /**< Tableau de pointeurs vers les nœuds de l'arbre */
 extern struct noeud* racine;                     /**< Pointeur vers la racine de l'arbre de Huffman */
 
@@ -192,4 +192,7 @@ void creationEntete(uint8_t* entete, uint32_t nbrCaractereTotal, uint8_t* texteC
                     uint8_t tailleCompress, uint32_t nbrCaractereDifferent, 
                     struct noeud* racine, uint8_t texte[]);
 
+void decompressEntete(uint8_t* entete, uint32_t nbrCaractereTotal, uint8_t* texteCompress, uint8_t tailleCompress, uint32_t nbrCaractereDifferent, struct noeud* arbreHuffman[256]);
+struct noeud* getChar(struct noeud* ptrNoeud, uint32_t code, uint32_t tailleCode);
+void reconstructionChaine(uint8_t* texteCompress, struct noeud* racine, uint8_t tailleCompress, uint32_t nbrCaractereTotal);
 #endif /* HUFFMAN_H */
