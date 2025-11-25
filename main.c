@@ -24,8 +24,6 @@ struct noeud*   racine  = NULL;
 
 
 void main (void){
-	GPIO_Init();
-	USART2_Init();
   printf("---------------------------------------Welcome into main-------------------------------------------\r\n");
   
   nbrCaractereTotal = occurrence (texte, tabCaractere);
@@ -455,7 +453,7 @@ void reconstructionChaine(uint8_t* texteCompress, struct noeud* racine, uint8_t 
     
         buffer[i] = bit;
     
-        printf("buffer[%d] = %d\n", i, bit);
+        printf("buffer[%d] = %d\r\n", i, bit);
     }
     
     index = 0;
