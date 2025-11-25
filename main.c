@@ -8,8 +8,8 @@
 #define TAILLE_MAX_Compress 100
 
 
-uint8_t	texte[]="aaaabbbccd";				                //Texte non compressé
-//uint8_t texte[]="abcdefffgg";
+//uint8_t	texte[]="aaaabbbccd";				                //Texte non compressé
+uint8_t texte[]="abcdefffgg";
 //uint8_t	texte[]="Demir Grappo, Thessa, Adrianna Grappo, Baby Montego, Idrian Sepulki, Kissandra Vorcien";
 
 uint8_t    texteCompress[TAILLE_MAX_Compress];		        //Texte compressé
@@ -188,8 +188,8 @@ void creerCode (struct noeud* ptrNoeud, uint32_t code, uint32_t nbrCaractereDiff
     }
     
     else{
-        creerCode(ptrNoeud->droite, (code<<1), nbrCaractereDifferent+1);
-        creerCode(ptrNoeud->gauche, (code<<1)+1, nbrCaractereDifferent+1);
+        creerCode(ptrNoeud->gauche, (code<<1), nbrCaractereDifferent+1);
+        creerCode(ptrNoeud->droite, (code<<1)+1, nbrCaractereDifferent+1);
     }
 }
 
