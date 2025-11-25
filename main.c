@@ -481,7 +481,7 @@ void reconstructionChaine(uint8_t* texteCompress, struct noeud* racine, uint8_t 
         }
         
         ptrNoeud = getChar(racine,compteur,tailleCode);
-        printf("--------------------------------------Fin du programme-------------------------------------------------\r\n");
     }
+    printf("\r\n--------------------------------------Fin du programme-------------------------------------------------\r\n");
 
 }
