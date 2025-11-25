@@ -24,6 +24,8 @@ struct noeud*   racine  = NULL;
 
 
 void main (void){
+	GPIO_Init();
+	USART2_Init();
   printf("---------------------------------------Welcome into main-------------------------------------------\r\n");
   
   nbrCaractereTotal = occurrence (texte, tabCaractere);
